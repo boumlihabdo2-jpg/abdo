@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QR Studio DZ — مولّد رموز QR الاحترافي</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2222%22 fill=%22%23141210%22/><rect x=%2222%22 y=%2222%22 width=%2222%22 height=%2222%22 fill=%22%23F4EEE2%22/><rect x=%2256%22 y=%2222%22 width=%2222%22 height=%2222%22 fill=%22%23F4EEE2%22/><rect x=%2222%22 y=%2256%22 width=%2222%22 height=%2222%22 fill=%22%23F4EEE2%22/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  :root{
+    --bg:#F4EEE2;
+    --surface:#FFFFFF;
+    --surface-2:#FBF7EE;
+    --ink:#15130F;
+    --ink-soft:#6E6757;
+    --line:#E3D9C4;
+    --line-strong:#D2C4A6;
+    --accent:#15130F;
+    --accent-contrast:#FDFAF2;
+    --hair:#B49A61;
+    --danger:#B3261E;
+    --danger-bg:#F6E7E4;
+    --shadow: 0 18px 40px -22px rgba(20,18,16,.35);
+    --shadow-soft: 0 10px 24px -16px rgba(20,18,16,.22);
+    --radius-lg:24px;
+    --radius-md:16px;
+    --radius-sm:11px;
+    --ease: cubic-bezier(.22,1,.36,1);
+    color-scheme: light;
+  }
+  [data-theme="dark"]{
+    --bg:#131210;
+    --surface:#1D1B17;
+    --surface-2:#19170F;
+    --ink:#F4EFE4;
+    --ink-soft:#AFA68F;
+    --line:#312C22;
+    --line-strong:#423B2C;
+    --accent:#F4EFE4;
+    --accent-contrast:#15130F;
+    --hair:#C9AE72;
+    --danger-bg:#3A1E1A;
+    color-scheme: dark;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Cairo',sans-serif;
+    min-height:100vh;
+    transition:background .3s var(--ease), color .3s var(--ease);
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit;}
+  button{font-family:inherit;}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 20px;}
+  svg.icon{width:18px;height:18px;stroke:currentColor;stroke-width:1.7;fill:none;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;display:block;}
+
+  @keyframes fadeUp{ from{opacity:0;transform:translateY(14px);} to{opacity:1;transform:translateY(0);} }
+  @keyframes fadeIn{ from{opacity:0;} to{opacity:1;} }
+  @keyframes popIn{ from{opacity:0;transform:scale(.92);} to{opacity:1;transform:scale(1);} }
+  @keyframes scanSweep{ 0%{transform:translateY(-100%);} 50%{transform:translateY(100%);} 100%{transform:translateY(-100%);} }
+  @keyframes spin{ to{transform:rotate(360deg);} }
+  @keyframes squareIn{ from{opacity:0;transform:scale(.4);} to{opacity:1;transform:scale(1);} }
+
+  .reveal{animation:fadeUp .7s var(--ease) both;}
+  .reveal.d1{animation-delay:.06s;}
+  .reveal.d2{animation-delay:.14s;}
+  .reveal.d3{animation-delay:.22s;}
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important;}
+  }
+
+  /* HEADER */
+  header.top{
+    border-bottom:1px solid var(--line);
+    background:var(--surface);
+    position:sticky;top:0;z-index:50;
+    backdrop-filter:saturate(1.1);
+  }
+  .top-inner{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:16px 20px;max-width:1180px;margin:0 auto;
+  }
+  .brand{display:flex;align-items:center;gap:12px;}
+  .brand-mark{
+    width:42px;height:42px;border-radius:12px;
+    background:var(--accent);
+    display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+  }
+  .brand-mark svg{width:20px;height:20px;}
+  .brand-mark rect{fill:var(--accent-contrast);}
+  .brand-text{display:flex;flex-direction:column;line-height:1.18;}
+  .brand-text b{font-size:17px;font-weight:800;letter-spacing:-.2px;}
+  .brand-text span{font-size:11.5px;color:var(--ink-soft);}
+  .theme-btn{
+    border:1px solid var(--line);
+    background:var(--surface);
+    width:42px;height:42px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;transition:border-color .2s var(--ease), transform .2s var(--ease), background .2s;
+    color:var(--ink);
+  }
+  .theme-btn:hover{border-color:var(--line-strong);transform:rotate(14deg);}
+  .theme-btn svg{width:19px;height:19px;}
+
+  /* HERO */
+  .hero{padding:56px 0 34px;}
+  .hero-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:34px;align-items:center;}
+  .hero h1{
+    font-size:clamp(28px,4vw,44px);
+    font-weight:800;line-height:1.28;margin:0 0 16px;letter-spacing:-.4px;
+  }
+  .hero p{color:var(--ink-soft);font-size:16px;line-height:1.95;max-width:54ch;margin:0 0 22px;}
+  .hero-badges{display:flex;gap:10px;flex-wrap:wrap;}
+  .badge{
+    border:1px solid var(--line);background:var(--surface);
+    padding:8px 15px;border-radius:999px;font-size:13px;color:var(--ink-soft);
+    display:flex;align-items:center;gap:7px;
+    transition:border-color .2s;
+  }
+  .badge:hover{border-color:var(--line-strong);}
+  .badge svg{width:15px;height:15px;color:var(--hair);}
+
+  .hero-visual{
+    background:var(--accent);color:var(--accent-contrast);
+    border-radius:var(--radius-lg);padding:30px;
+    display:flex;flex-direction:column;align-items:center;gap:14px;
+    box-shadow:var(--shadow);position:relative;overflow:hidden;
+  }
+  .hero-qr{
+    width:128px;height:128px;position:relative;
+    display:grid;grid-template-columns:repeat(7,1fr);grid-template-rows:repeat(7,1fr);
+    gap:3px;
+  }
+  .hero-qr i{
+    background:var(--accent-contrast);border-radius:2px;
+    animation:squareIn .5s var(--ease) both;
+  }
+  .hero-visual .scan{
+    position:absolute;left:14%;right:14%;top:10%;height:34%;
+    background:linear-gradient(to bottom, transparent, rgba(180,154,97,.55), transparent);
+    animation:scanSweep 3.2s ease-in-out infinite;
+    pointer-events:none;
+  }
+  .hero-visual p{margin:0;color:color-mix(in srgb, var(--accent-contrast) 70%, transparent);font-size:12.5px;text-align:center;}
+
+  /* MAIN STUDIO */
+  main{padding:10px 0 60px;}
+  .studio{
+    display:grid;grid-template-columns:1.15fr .85fr;gap:24px;align-items:start;
+  }
+  .panel{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius-lg);
+    padding:28px;
+    box-shadow:var(--shadow-soft);
+  }
+  .panel h2{font-size:19px;margin:0 0 4px;font-weight:800;letter-spacing:-.2px;}
+  .panel .sub{color:var(--ink-soft);font-size:13.5px;margin:0 0 22px;}
+
+  .type-tabs{
+    display:grid;grid-template-columns:repeat(5,1fr);
+    gap:8px;margin-bottom:24px;
+    background:var(--surface-2);
+    padding:6px;border-radius:14px;border:1px solid var(--line);
+  }
+  .type-tab{
+    border:none;background:transparent;
+    border-radius:10px;padding:11px 4px;
+    cursor:pointer;text-align:center;font-size:12.3px;
+    display:flex;flex-direction:column;align-items:center;gap:6px;
+    color:var(--ink-soft);transition:background .22s var(--ease), color .22s var(--ease), transform .18s var(--ease);
+  }
+  .type-tab svg{width:19px;height:19px;}
+  .type-tab:hover{color:var(--ink);}
+  .type-tab.active{
+    background:var(--accent);color:var(--accent-contrast);font-weight:700;
+    transform:translateY(-1px);
+    box-shadow:var(--shadow-soft);
+  }
+
+  .field-group{display:none;flex-direction:column;gap:14px;}
+  .field-group.active{display:flex;animation:fadeIn .3s var(--ease) both;}
+  .field{display:flex;flex-direction:column;gap:6px;}
+  .field label{font-size:13.5px;font-weight:600;color:var(--ink);}
+  .field .hint{font-size:11.5px;color:var(--ink-soft);}
+  input[type=text], input[type=tel], input[type=email], input[type=password], textarea, select{
+    border:1px solid var(--line);
+    background:var(--surface-2);
+    color:var(--ink);
+    padding:12px 14px;border-radius:var(--radius-sm);
+    font-family:inherit;font-size:14.5px;
+    width:100%;outline:none;transition:border-color .18s var(--ease), box-shadow .18s var(--ease);
+  }
+  input:focus, textarea:focus, select:focus{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent);}
+  textarea{resize:vertical;min-height:84px;}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .check{display:flex;align-items:center;gap:9px;font-size:13.5px;color:var(--ink-soft);cursor:pointer;}
+  .check input{width:17px;height:17px;accent-color:var(--accent);}
+
+  .error-box{
+    display:none;
+    background:var(--danger-bg);color:var(--danger);
+    border:1px solid var(--danger);
+    border-radius:var(--radius-sm);
+    padding:12px 14px;font-size:13.5px;margin-top:4px;
+    align-items:center;gap:9px;
+    animation:fadeUp .3s var(--ease) both;
+  }
+  .error-box svg{width:17px;height:17px;flex-shrink:0;}
+  .error-box.show{display:flex;}
+
+  .style-row{
+    display:grid;grid-template-columns:1fr 1fr 1fr;
+    gap:12px;margin-top:24px;padding-top:22px;
+    border-top:1px solid var(--line);
+  }
+  .color-field{display:flex;flex-direction:column;gap:7px;}
+  .color-field label{font-size:12.5px;color:var(--ink-soft);font-weight:600;}
+  .color-field .swatch{
+    display:flex;align-items:center;gap:9px;
+    border:1px solid var(--line);border-radius:var(--radius-sm);
+    padding:7px 11px;background:var(--surface-2);
+  }
+  input[type=color]{
+    width:26px;height:26px;border:none;border-radius:50%;padding:0;
+    background:none;cursor:pointer;
+  }
+  input[type=color]::-webkit-color-swatch-wrapper{padding:0;border-radius:50%;}
+  input[type=color]::-webkit-color-swatch{border:1px solid var(--line-strong);border-radius:50%;}
+  .color-field .hexval{font-size:11.5px;color:var(--ink-soft);}
+
+  .generate-btn{
+    margin-top:24px;width:100%;
+    background:var(--accent);color:var(--accent-contrast);
+    border:1px solid var(--accent);padding:16px;border-radius:var(--radius-sm);
+    font-size:15.5px;font-weight:700;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;gap:9px;
+    transition:transform .16s var(--ease), box-shadow .16s var(--ease), opacity .16s;
+    box-shadow:var(--shadow-soft);
+  }
+  .generate-btn svg{width:18px;height:18px;}
+  .generate-btn:hover{transform:translateY(-2px);box-shadow:var(--shadow);}
+  .generate-btn:active{transform:translateY(0);}
+  .generate-btn.loading{opacity:.75;pointer-events:none;}
+  .generate-btn .spinner{
+    width:16px;height:16px;border-radius:50%;
+    border:2px solid color-mix(in srgb, var(--accent-contrast) 35%, transparent);
+    border-top-color:var(--accent-contrast);
+    animation:spin .7s linear infinite;
+    display:none;
+  }
+  .generate-btn.loading .spinner{display:block;}
+  .generate-btn.loading .btn-label-icon{display:none;}
+
+  /* PREVIEW PANEL */
+  .preview-panel{position:sticky;top:90px;display:flex;flex-direction:column;align-items:center;gap:18px;}
+  #qrcode-box{
+    width:100%;min-height:250px;
+    background:var(--surface-2);border:1px solid var(--line);
+    border-radius:var(--radius-md);
+    display:flex;align-items:center;justify-content:center;
+    padding:22px;position:relative;overflow:hidden;
+  }
+  #qrcode-box img, #qrcode-box canvas{border-radius:8px;max-width:100%;height:auto;animation:popIn .4s var(--ease) both;box-shadow:var(--shadow-soft);}
+  .empty-state{color:var(--ink-soft);font-size:13.5px;text-align:center;line-height:1.8;display:flex;flex-direction:column;align-items:center;gap:10px;}
+  .empty-state svg{width:32px;height:32px;color:var(--line-strong);}
+
+  .loading-state{display:flex;flex-direction:column;align-items:center;gap:12px;color:var(--ink-soft);font-size:13px;}
+  .loading-ring{
+    width:40px;height:40px;border-radius:50%;
+    border:3px solid var(--line);
+    border-top-color:var(--ink);
+    animation:spin .8s linear infinite;
+  }
+
+  .preview-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;}
+  .action-btn{
+    border:1px solid var(--line);background:var(--surface-2);color:var(--ink);
+    padding:13px;border-radius:var(--radius-sm);font-size:13.5px;font-weight:700;
+    cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;
+    transition:border-color .16s var(--ease), transform .16s var(--ease), background .16s var(--ease);
+  }
+  .action-btn svg{width:16px;height:16px;}
+  .action-btn:hover:not(:disabled){border-color:var(--line-strong);transform:translateY(-1px);}
+  .action-btn:disabled{opacity:.4;cursor:not-allowed;}
+  .action-btn.primary{
+    grid-column:1/-1;background:var(--accent);border-color:var(--accent);color:var(--accent-contrast);
+  }
+  .action-btn.primary:hover:not(:disabled){transform:translateY(-2px);box-shadow:var(--shadow-soft);}
+
+  .toast{
+    position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(24px);
+    background:var(--accent);color:var(--accent-contrast);padding:13px 22px;border-radius:999px;
+    font-size:13.5px;opacity:0;pointer-events:none;transition:.3s var(--ease);z-index:200;
+    box-shadow:0 16px 36px rgba(0,0,0,.28);
+    display:flex;align-items:center;gap:9px;
+  }
+  .toast svg{width:16px;height:16px;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  /* HISTORY */
+  .history-section{margin-top:44px;}
+  .history-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px;}
+  .history-head h2{font-size:19px;font-weight:800;margin:0;letter-spacing:-.2px;}
+  .clear-btn{
+    border:1px solid var(--line);color:var(--danger);background:var(--surface);
+    padding:9px 18px;border-radius:999px;font-size:13px;cursor:pointer;font-weight:700;
+    display:flex;align-items:center;gap:7px;transition:border-color .18s, background .18s;
+  }
+  .clear-btn svg{width:14px;height:14px;}
+  .clear-btn:hover{background:var(--danger-bg);border-color:var(--danger);}
+  .history-grid{
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(236px,1fr));gap:14px;
+  }
+  .history-empty{
+    grid-column:1/-1;text-align:center;color:var(--ink-soft);
+    padding:40px 10px;border:1px dashed var(--line-strong);border-radius:var(--radius-md);font-size:13.5px;
+  }
+  .hist-card{
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-md);
+    padding:15px;display:flex;flex-direction:column;gap:10px;
+    animation:fadeUp .45s var(--ease) both;
+    transition:border-color .18s, transform .18s;
+  }
+  .hist-card:hover{border-color:var(--line-strong);transform:translateY(-2px);}
+  .hist-top{display:flex;align-items:center;gap:11px;}
+  .hist-icon{
+    width:36px;height:36px;border-radius:10px;background:var(--surface-2);border:1px solid var(--line);
+    color:var(--ink);display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  }
+  .hist-icon svg{width:17px;height:17px;}
+  .hist-meta{overflow:hidden;}
+  .hist-type{font-size:11.5px;color:var(--ink-soft);}
+  .hist-content{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .hist-date{font-size:10.5px;color:var(--ink-soft);margin-top:2px;}
+  .hist-actions{display:flex;gap:8px;margin-top:2px;}
+  .hist-actions button{
+    flex:1;font-size:12px;padding:8px;border-radius:8px;border:1px solid var(--line);
+    background:var(--surface-2);cursor:pointer;color:var(--ink-soft);font-weight:700;
+    display:flex;align-items:center;justify-content:center;gap:6px;transition:border-color .16s,color .16s;
+  }
+  .hist-actions button svg{width:13.5px;height:13.5px;}
+  .hist-actions button:hover{border-color:var(--line-strong);color:var(--ink);}
+  .hist-actions button.del:hover{border-color:var(--danger);color:var(--danger);}
+
+  footer{
+    border-top:1px solid var(--line);padding:26px 0;margin-top:30px;
+    text-align:center;color:var(--ink-soft);font-size:13px;
+  }
+
+  @media (max-width:880px){
+    .hero-grid{grid-template-columns:1fr;}
+    .studio{grid-template-columns:1fr;}
+    .preview-panel{position:static;}
+    .type-tabs{grid-template-columns:repeat(3,1fr);}
+    .style-row{grid-template-columns:1fr 1fr;}
+  }
+  @media (max-width:420px){
+    .type-tabs{grid-template-columns:repeat(2,1fr);}
+    .row2{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body data-theme="light">
+
+<header class="top">
+  <div class="top-inner">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="3" height="3" rx=".5"></rect><rect x="18" y="14" width="3" height="3" rx=".5"></rect><rect x="14" y="18" width="3" height="3" rx=".5"></rect><rect x="18" y="18" width="3" height="3" rx=".5"></rect></svg>
+      </div>
+      <div class="brand-text">
+        <b>QR Studio DZ</b>
+        <span>مولّد رموز QR احترافي</span>
+      </div>
+    </div>
+    <button class="theme-btn" id="themeToggle" title="تبديل الوضع الليلي/النهاري" aria-label="تبديل المظهر">
+      <svg class="icon icon-moon" viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5Z"></path></svg>
+    </button>
+  </div>
+</header>
+
+<div class="wrap">
+  <section class="hero">
+    <div class="hero-grid">
+      <div class="reveal d1">
+        <h1>أنشئ رموز QR احترافية خلال ثوانٍ</h1>
+        <p>منصة جزائرية بسيطة لتوليد رموز QR للروابط، النصوص، شبكات الواي فاي، أرقام الهاتف، واتساب والبريد الإلكتروني — بدون تسجيل، وبدون اتصال بالخادم. كل شيء يعمل من متصفحك مباشرة.</p>
+        <div class="hero-badges">
+          <span class="badge"><svg viewBox="0 0 24 24"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z"></path></svg>توليد فوري</span>
+          <span class="badge"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="10" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>خصوصية كاملة محليًا</span>
+          <span class="badge"><svg viewBox="0 0 24 24"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 21h14"></path></svg>تحميل PNG</span>
+        </div>
+      </div>
+      <div class="hero-visual reveal d2">
+        <div class="hero-qr" id="heroQr"></div>
+        <div class="scan"></div>
+        <p>رمز تجريبي — جرّب الآن مولّدك الخاص بالأسفل</p>
+      </div>
+    </div>
+  </section>
+
+  <main>
+    <div class="studio">
+      <!-- LEFT: FORM PANEL -->
+      <div class="panel reveal d2">
+        <h2>بيانات الرمز</h2>
+        <p class="sub">اختر نوع المحتوى وأدخل المعلومات المطلوبة</p>
+
+        <div class="type-tabs">
+          <button type="button" class="type-tab active" data-type="link">
+            <svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.07 0l2.5-2.5a5 5 0 0 0-7.07-7.07L11 5"></path><path d="M14 11a5 5 0 0 0-7.07 0l-2.5 2.5a5 5 0 0 0 7.07 7.07L13 19"></path></svg>
+            رابط / نص
+          </button>
+          <button type="button" class="type-tab" data-type="wifi">
+            <svg viewBox="0 0 24 24"><path d="M5 13a11 11 0 0 1 14 0"></path><path d="M8.5 16.5a6 6 0 0 1 7 0"></path><circle cx="12" cy="20" r="1"></circle></svg>
+            واي فاي
+          </button>
+          <button type="button" class="type-tab" data-type="phone">
+            <svg viewBox="0 0 24 24"><path d="M15 2a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h6Z"></path><path d="M11 18h2"></path></svg>
+            هاتف
+          </button>
+          <button type="button" class="type-tab" data-type="whatsapp">
+            <svg viewBox="0 0 24 24"><path d="M21 11.5a8.5 8.5 0 0 1-12.4 7.6L3 20l1-5.3A8.5 8.5 0 1 1 21 11.5Z"></path></svg>
+            واتساب
+          </button>
+          <button type="button" class="type-tab" data-type="email">
+            <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="m3 7 9 6 9-6"></path></svg>
+            بريد إلكتروني
+          </button>
+        </div>
+
+        <!-- LINK / TEXT -->
+        <div class="field-group active" data-group="link">
+          <div class="field">
+            <label>الرابط أو النص</label>
+            <textarea id="linkInput" placeholder="https://example.com أو أي نص تريده"></textarea>
+            <span class="hint">يمكنك وضع رابط موقع أو أي نص حر.</span>
+          </div>
+        </div>
+
+        <!-- WIFI -->
+        <div class="field-group" data-group="wifi">
+          <div class="field">
+            <label>اسم الشبكة (SSID)</label>
+            <input type="text" id="wifiSsid" placeholder="مثال: MyHomeWiFi">
+          </div>
+          <div class="row2">
+            <div class="field">
+              <label>كلمة المرور</label>
+              <input type="password" id="wifiPass" placeholder="كلمة مرور الشبكة">
+            </div>
+            <div class="field">
+              <label>نوع التشفير</label>
+              <select id="wifiEnc">
+                <option value="WPA">WPA / WPA2</option>
+                <option value="WEP">WEP</option>
+                <option value="nopass">بدون كلمة مرور</option>
+              </select>
+            </div>
+          </div>
+          <label class="check"><input type="checkbox" id="wifiHidden"> الشبكة مخفية (Hidden Network)</label>
+        </div>
+
+        <!-- PHONE -->
+        <div class="field-group" data-group="phone">
+          <div class="field">
+            <label>رقم الهاتف</label>
+            <input type="tel" id="phoneInput" placeholder="مثال: +213555123456">
+            <span class="hint">يفضَّل كتابة الرقم مع رمز الدولة.</span>
+          </div>
+        </div>
+
+        <!-- WHATSAPP -->
+        <div class="field-group" data-group="whatsapp">
+          <div class="field">
+            <label>رقم واتساب (مع رمز الدولة بدون +)</label>
+            <input type="tel" id="waPhone" placeholder="مثال: 213555123456">
+          </div>
+          <div class="field">
+            <label>رسالة جاهزة (اختياري)</label>
+            <textarea id="waMsg" placeholder="مرحبًا، أريد الاستفسار عن..."></textarea>
+          </div>
+        </div>
+
+        <!-- EMAIL -->
+        <div class="field-group" data-group="email">
+          <div class="field">
+            <label>البريد الإلكتروني</label>
+            <input type="email" id="emailInput" placeholder="example@email.com">
+          </div>
+          <div class="row2">
+            <div class="field">
+              <label>الموضوع (اختياري)</label>
+              <input type="text" id="emailSubject" placeholder="موضوع الرسالة">
+            </div>
+            <div class="field">
+              <label>نص الرسالة (اختياري)</label>
+              <input type="text" id="emailBody" placeholder="محتوى الرسالة">
+            </div>
+          </div>
+        </div>
+
+        <div class="error-box" id="errorBox">
+          <svg viewBox="0 0 24 24"><path d="M12 9v4"></path><path d="M12 17h.01"></path><path d="M10.3 3.9 2.5 17.1a1.5 1.5 0 0 0 1.3 2.3h16.4a1.5 1.5 0 0 0 1.3-2.3L13.7 3.9a1.5 1.5 0 0 0-2.6 0Z"></path></svg>
+          <span id="errorText"></span>
+        </div>
+
+        <div class="style-row">
+          <div class="color-field">
+            <label>لون الرمز</label>
+            <div class="swatch">
+              <input type="color" id="colorDark" value="#15130F">
+              <span class="hexval" id="colorDarkVal">#15130F</span>
+            </div>
+          </div>
+          <div class="color-field">
+            <label>لون الخلفية</label>
+            <div class="swatch">
+              <input type="color" id="colorLight" value="#ffffff">
+              <span class="hexval" id="colorLightVal">#FFFFFF</span>
+            </div>
+          </div>
+          <div class="color-field">
+            <label>الحجم</label>
+            <select id="qrSize">
+              <option value="150">150×150</option>
+              <option value="200" selected>200×200</option>
+              <option value="300">300×300</option>
+              <option value="400">400×400</option>
+            </select>
+          </div>
+        </div>
+
+        <button class="generate-btn" id="generateBtn">
+          <svg class="icon btn-label-icon" viewBox="0 0 24 24"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z"></path></svg>
+          <span class="spinner"></span>
+          <span>توليد رمز QR</span>
+        </button>
+      </div>
+
+      <!-- RIGHT: PREVIEW PANEL -->
+      <div class="panel preview-panel reveal d3">
+        <h2 style="align-self:flex-start;">المعاينة</h2>
+        <div id="qrcode-box">
+          <div class="empty-state" id="emptyState">
+            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect><path d="M14 14h3v3h-3zM18 18h3v3h-3zM14 18h2M18 14h2"></path></svg>
+            لم يتم توليد أي رمز بعد.<br>املأ البيانات واضغط «توليد رمز QR»
+          </div>
+        </div>
+        <div class="preview-actions">
+          <button class="action-btn" id="copyBtn" disabled>
+            <svg viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2"></rect><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"></path></svg>
+            نسخ المحتوى
+          </button>
+          <button class="action-btn" id="newBtn" disabled>
+            <svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36"></path><path d="M21 3v6h-6"></path></svg>
+            رمز جديد
+          </button>
+          <button class="action-btn primary" id="downloadBtn" disabled>
+            <svg viewBox="0 0 24 24"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 21h14"></path></svg>
+            تحميل PNG
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTORY -->
+    <section class="history-section">
+      <div class="history-head">
+        <h2>السجل المحفوظ محليًا</h2>
+        <button class="clear-btn" id="clearHistoryBtn">
+          <svg viewBox="0 0 24 24"><path d="M4 7h16"></path><path d="M10 11v6M14 11v6"></path><path d="M6 7l1 13a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-13"></path><path d="M9 7V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3"></path></svg>
+          حذف كل السجل
+        </button>
+      </div>
+      <div class="history-grid" id="historyGrid"></div>
+    </section>
+  </main>
+</div>
+
+<footer>
+  QR Studio DZ — صُنع في الجزائر — جميع البيانات تبقى على جهازك فقط، لا يتم إرسال أي شيء إلى أي خادم.
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  const ICONS = {
+    link: '<svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.07 0l2.5-2.5a5 5 0 0 0-7.07-7.07L11 5"></path><path d="M14 11a5 5 0 0 0-7.07 0l-2.5 2.5a5 5 0 0 0 7.07 7.07L13 19"></path></svg>',
+    wifi: '<svg viewBox="0 0 24 24"><path d="M5 13a11 11 0 0 1 14 0"></path><path d="M8.5 16.5a6 6 0 0 1 7 0"></path><circle cx="12" cy="20" r="1"></circle></svg>',
+    phone: '<svg viewBox="0 0 24 24"><path d="M15 2a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h6Z"></path><path d="M11 18h2"></path></svg>',
+    whatsapp: '<svg viewBox="0 0 24 24"><path d="M21 11.5a8.5 8.5 0 0 1-12.4 7.6L3 20l1-5.3A8.5 8.5 0 1 1 21 11.5Z"></path></svg>',
+    email: '<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="m3 7 9 6 9-6"></path></svg>'
+  };
+  const TYPE_LABELS = {link:'رابط / نص', wifi:'واي فاي', phone:'هاتف', whatsapp:'واتساب', email:'بريد إلكتروني'};
+
+  /* ---------- HERO QR DECOR ---------- */
+  (function buildHeroQr(){
+    const grid = document.getElementById('heroQr');
+    const pattern = [
+      1,1,1,0,1,1,1,
+      1,0,1,0,1,0,1,
+      1,1,1,0,1,1,1,
+      0,0,0,1,0,0,0,
+      1,1,0,0,1,1,1,
+      1,0,1,0,0,0,1,
+      1,1,1,0,1,1,1
+    ];
+    pattern.forEach((v,idx)=>{
+      const cell = document.createElement('i');
+      if(v){
+        cell.style.animationDelay = (idx * 0.012) + 's';
+      } else {
+        cell.style.background = 'transparent';
+        cell.style.animation = 'none';
+      }
+      grid.appendChild(cell);
+    });
+  })();
+
+  /* ---------- THEME ---------- */
+  const body = document.body;
+  const themeToggle = document.getElementById('themeToggle');
+  const moonIcon = '<svg class="icon" viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5Z"></path></svg>';
+  const sunIcon = '<svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.5"></circle><path d="M12 2v2.5M12 19.5V22M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2 12h2.5M19.5 12H22M4.2 19.8 6 18M18 6l1.8-1.8"></path></svg>';
+  function applyTheme(t){
+    body.setAttribute('data-theme', t);
+    themeToggle.innerHTML = t === 'dark' ? sunIcon : moonIcon;
+    localStorage.setItem('qr_theme', t);
+  }
+  applyTheme(localStorage.getItem('qr_theme') || 'light');
+  themeToggle.addEventListener('click', function(){
+    applyTheme(body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+  });
+
+  /* ---------- TOAST ---------- */
+  const toastEl = document.getElementById('toast');
+  const toastCheck = '<svg viewBox="0 0 24 24"><path d="m5 13 4 4L19 7"></path></svg>';
+  let toastTimer = null;
+  function toast(msg){
+    toastEl.innerHTML = toastCheck + '<span>'+msg+'</span>';
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(()=> toastEl.classList.remove('show'), 2200);
+  }
+
+  /* ---------- TYPE TABS ---------- */
+  const tabs = document.querySelectorAll('.type-tab');
+  const groups = document.querySelectorAll('.field-group');
+  let currentType = 'link';
+  tabs.forEach(tab=>{
+    tab.addEventListener('click', function(){
+      tabs.forEach(t=>t.classList.remove('active'));
+      tab.classList.add('active');
+      currentType = tab.getAttribute('data-type');
+      groups.forEach(g=>{
+        g.classList.toggle('active', g.getAttribute('data-group') === currentType);
+      });
+      hideError();
+    });
+  });
+
+  /* ---------- COLOR INPUTS ---------- */
+  const colorDark = document.getElementById('colorDark');
+  const colorLight = document.getElementById('colorLight');
+  const colorDarkVal = document.getElementById('colorDarkVal');
+  const colorLightVal = document.getElementById('colorLightVal');
+  colorDark.addEventListener('input', ()=> colorDarkVal.textContent = colorDark.value.toUpperCase());
+  colorLight.addEventListener('input', ()=> colorLightVal.textContent = colorLight.value.toUpperCase());
+
+  /* ---------- ERROR BOX ---------- */
+  const errorBox = document.getElementById('errorBox');
+  const errorText = document.getElementById('errorText');
+  function showError(msg){
+    errorText.textContent = msg;
+    errorBox.classList.add('show');
+  }
+  function hideError(){ errorBox.classList.remove('show'); }
+
+  /* ---------- VALIDATION HELPERS ---------- */
+  function isValidEmail(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
+  function isValidPhone(v){ return /^\+?[0-9]{8,15}$/.test(v.replace(/[\s-]/g,'')); }
+
+  /* ---------- BUILD CONTENT PER TYPE ---------- */
+  function buildContent(){
+    if(currentType === 'link'){
+      const v = document.getElementById('linkInput').value.trim();
+      if(!v) return {error:'الرجاء إدخال رابط أو نص.'};
+      return {content:v, label:v, typeLabel:TYPE_LABELS.link, icon:ICONS.link};
+    }
+    if(currentType === 'wifi'){
+      const ssid = document.getElementById('wifiSsid').value.trim();
+      const pass = document.getElementById('wifiPass').value;
+      const enc = document.getElementById('wifiEnc').value;
+      const hidden = document.getElementById('wifiHidden').checked;
+      if(!ssid) return {error:'الرجاء إدخال اسم الشبكة (SSID).'};
+      if(enc !== 'nopass' && !pass) return {error:'الرجاء إدخال كلمة المرور أو اختيار "بدون كلمة مرور".'};
+      const esc = s => s.replace(/([\\;,:"])/g, '\\$1');
+      const content = `WIFI:T:${enc};S:${esc(ssid)};P:${enc==='nopass'?'':esc(pass)};H:${hidden?'true':'false'};;`;
+      return {content, label: 'شبكة: ' + ssid, typeLabel:TYPE_LABELS.wifi, icon:ICONS.wifi};
+    }
+    if(currentType === 'phone'){
+      const v = document.getElementById('phoneInput').value.trim();
+      if(!v) return {error:'الرجاء إدخال رقم الهاتف.'};
+      if(!isValidPhone(v)) return {error:'رقم الهاتف غير صالح. استعمل أرقامًا فقط (8 إلى 15 رقمًا).'};
+      return {content:'tel:'+v.replace(/\s/g,''), label:v, typeLabel:TYPE_LABELS.phone, icon:ICONS.phone};
+    }
+    if(currentType === 'whatsapp'){
+      const v = document.getElementById('waPhone').value.trim();
+      const msg = document.getElementById('waMsg').value.trim();
+      if(!v) return {error:'الرجاء إدخال رقم واتساب.'};
+      const clean = v.replace(/[^0-9]/g,'');
+      if(clean.length < 8 || clean.length > 15) return {error:'رقم واتساب غير صالح. اكتب الرقم مع رمز الدولة بدون +.'};
+      let content = 'https://wa.me/' + clean;
+      if(msg) content += '?text=' + encodeURIComponent(msg);
+      return {content, label:'واتساب: '+v, typeLabel:TYPE_LABELS.whatsapp, icon:ICONS.whatsapp};
+    }
+    if(currentType === 'email'){
+      const v = document.getElementById('emailInput').value.trim();
+      const subject = document.getElementById('emailSubject').value.trim();
+      const bodyTxt = document.getElementById('emailBody').value.trim();
+      if(!v) return {error:'الرجاء إدخال البريد الإلكتروني.'};
+      if(!isValidEmail(v)) return {error:'صيغة البريد الإلكتروني غير صحيحة.'};
+      let content = 'mailto:'+v;
+      const params = [];
+      if(subject) params.push('subject='+encodeURIComponent(subject));
+      if(bodyTxt) params.push('body='+encodeURIComponent(bodyTxt));
+      if(params.length) content += '?' + params.join('&');
+      return {content, label:v, typeLabel:TYPE_LABELS.email, icon:ICONS.email};
+    }
+    return {error:'نوع غير معروف.'};
+  }
+
+  /* ---------- QR GENERATION ---------- */
+  const qrBox = document.getElementById('qrcode-box');
+  const generateBtn = document.getElementById('generateBtn');
+  const downloadBtn = document.getElementById('downloadBtn');
+  const copyBtn = document.getElementById('copyBtn');
+  const newBtn = document.getElementById('newBtn');
+  let qrInstance = null;
+  let lastContent = '';
+
+  function clearQrBox(){
+    qrBox.innerHTML = '';
+  }
+
+  function showLoadingState(){
+    clearQrBox();
+    qrBox.innerHTML = '<div class="loading-state"><div class="loading-ring"></div><span>جارٍ التوليد...</span></div>';
+  }
+
+  function doGenerate(result){
+    const size = parseInt(document.getElementById('qrSize').value, 10);
+    clearQrBox();
+    try{
+      qrInstance = new QRCode(qrBox, {
+        text: result.content,
+        width: size,
+        height: size,
+        colorDark: colorDark.value,
+        colorLight: colorLight.value,
+        correctLevel: QRCode.CorrectLevel.M
+      });
+    }catch(e){
+      showError('حدث خطأ أثناء توليد الرمز. حاول مرة أخرى.');
+      generateBtn.classList.remove('loading');
+      return;
+    }
+    lastContent = result.content;
+    downloadBtn.disabled = false;
+    copyBtn.disabled = false;
+    newBtn.disabled = false;
+    saveToHistory(result);
+    generateBtn.classList.remove('loading');
+    toast('تم توليد الرمز بنجاح');
+  }
+
+  function generate(){
+    hideError();
+    const result = buildContent();
+    if(result.error){
+      showError(result.error);
+      return;
+    }
+    generateBtn.classList.add('loading');
+    showLoadingState();
+    // Brief, deliberate generation moment for a more polished feel.
+    setTimeout(()=> doGenerate(result), 420);
+  }
+
+  generateBtn.addEventListener('click', generate);
+
+  const emptyStateHtml = `<div class="empty-state" id="emptyState">
+    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect><path d="M14 14h3v3h-3zM18 18h3v3h-3zM14 18h2M18 14h2"></path></svg>
+    لم يتم توليد أي رمز بعد.<br>املأ البيانات واضغط «توليد رمز QR»
+  </div>`;
+
+  newBtn.addEventListener('click', function(){
+    clearQrBox();
+    qrBox.innerHTML = emptyStateHtml;
+    downloadBtn.disabled = true;
+    copyBtn.disabled = true;
+    newBtn.disabled = true;
+    hideError();
+  });
+
+  downloadBtn.addEventListener('click', function(){
+    const canvas = qrBox.querySelector('canvas');
+    if(!canvas){ toast('لا يوجد رمز لتحميله.'); return; }
+    const link = document.createElement('a');
+    link.download = 'qr-studio-dz-' + Date.now() + '.png';
+    link.href = canvas.toDataURL('image/png');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast('تم تحميل الصورة');
+  });
+
+  copyBtn.addEventListener('click', function(){
+    if(!lastContent){ return; }
+    const fallbackCopy = () => {
+      const ta = document.createElement('textarea');
+      ta.value = lastContent;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try{ document.execCommand('copy'); }catch(e){}
+      document.body.removeChild(ta);
+      toast('تم نسخ المحتوى');
+    };
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(lastContent).then(()=> toast('تم نسخ المحتوى')).catch(fallbackCopy);
+    } else {
+      fallbackCopy();
+    }
+  });
+
+  /* ---------- HISTORY (localStorage) ---------- */
+  const HIST_KEY = 'qr_studio_dz_history';
+  const historyGrid = document.getElementById('historyGrid');
+  const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+
+  function loadHistory(){
+    try{
+      return JSON.parse(localStorage.getItem(HIST_KEY)) || [];
+    }catch(e){ return []; }
+  }
+  function storeHistory(arr){
+    localStorage.setItem(HIST_KEY, JSON.stringify(arr));
+  }
+  function saveToHistory(result){
+    const arr = loadHistory();
+    arr.unshift({
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2,6),
+      type: currentType,
+      typeLabel: result.typeLabel,
+      label: result.label,
+      content: result.content,
+      colorDark: colorDark.value,
+      colorLight: colorLight.value,
+      size: document.getElementById('qrSize').value,
+      date: new Date().toLocaleString('ar-DZ')
+    });
+    const trimmed = arr.slice(0, 20);
+    storeHistory(trimmed);
+    renderHistory();
+  }
+
+  const reuseIcon = '<svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36"></path><path d="M21 3v6h-6"></path></svg>';
+  const delIcon = '<svg viewBox="0 0 24 24"><path d="M4 7h16"></path><path d="M10 11v6M14 11v6"></path><path d="M6 7l1 13a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-13"></path><path d="M9 7V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3"></path></svg>';
+
+  function renderHistory(){
+    const arr = loadHistory();
+    historyGrid.innerHTML = '';
+    if(arr.length === 0){
+      historyGrid.innerHTML = '<div class="history-empty">لا يوجد سجل بعد. أول رمز تولّده سيظهر هنا تلقائيًا.</div>';
+      return;
+    }
+    arr.forEach((item, i)=>{
+      const card = document.createElement('div');
+      card.className = 'hist-card';
+      card.style.animationDelay = (i * 0.04) + 's';
+      card.innerHTML = `
+        <div class="hist-top">
+          <div class="hist-icon">${ICONS[item.type] || ICONS.link}</div>
+          <div class="hist-meta">
+            <div class="hist-type">${item.typeLabel}</div>
+            <div class="hist-content" title="${escapeHtml(item.label)}">${escapeHtml(item.label)}</div>
+            <div class="hist-date">${item.date}</div>
+          </div>
+        </div>
+        <div class="hist-actions">
+          <button class="reuse">${reuseIcon}<span>إعادة توليد</span></button>
+          <button class="del">${delIcon}<span>حذف</span></button>
+        </div>
+      `;
+      card.querySelector('.reuse').addEventListener('click', ()=> reuseHistoryItem(item));
+      card.querySelector('.del').addEventListener('click', ()=> deleteHistoryItem(item.id));
+      historyGrid.appendChild(card);
+    });
+  }
+
+  function escapeHtml(str){
+    const d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+  }
+
+  function deleteHistoryItem(id){
+    const arr = loadHistory().filter(i=> i.id !== id);
+    storeHistory(arr);
+    renderHistory();
+    toast('تم حذف العنصر من السجل');
+  }
+
+  clearHistoryBtn.addEventListener('click', function(){
+    if(loadHistory().length === 0){ toast('السجل فارغ بالفعل'); return; }
+    if(confirm('هل أنت متأكد من حذف كل السجل؟ لا يمكن التراجع عن هذا الإجراء.')){
+      storeHistory([]);
+      renderHistory();
+      toast('تم حذف السجل بالكامل');
+    }
+  });
+
+  function reuseHistoryItem(item){
+    tabs.forEach(t=> t.classList.toggle('active', t.getAttribute('data-type') === item.type));
+    groups.forEach(g=> g.classList.toggle('active', g.getAttribute('data-group') === item.type));
+    currentType = item.type;
+    colorDark.value = item.colorDark || '#15130F';
+    colorLight.value = item.colorLight || '#ffffff';
+    colorDarkVal.textContent = colorDark.value.toUpperCase();
+    colorLightVal.textContent = colorLight.value.toUpperCase();
+    document.getElementById('qrSize').value = item.size || '200';
+
+    if(item.type === 'link'){
+      document.getElementById('linkInput').value = item.content;
+    } else if(item.type === 'phone'){
+      document.getElementById('phoneInput').value = item.content.replace('tel:','');
+    } else if(item.type === 'whatsapp'){
+      const url = new URL(item.content);
+      document.getElementById('waPhone').value = url.pathname.replace('/','');
+      document.getElementById('waMsg').value = url.searchParams.get('text') || '';
+    } else if(item.type === 'email'){
+      const raw = item.content.replace('mailto:','');
+      const [addr, query] = raw.split('?');
+      document.getElementById('emailInput').value = addr;
+      if(query){
+        const params = new URLSearchParams(query);
+        document.getElementById('emailSubject').value = params.get('subject') || '';
+        document.getElementById('emailBody').value = params.get('body') || '';
+      }
+    } else if(item.type === 'wifi'){
+      const m = item.content.match(/^WIFI:T:([^;]*);S:([^;]*);P:([^;]*);H:([^;]*);;?$/);
+      if(m){
+        document.getElementById('wifiEnc').value = m[1] || 'WPA';
+        document.getElementById('wifiSsid').value = (m[2]||'').replace(/\\(.)/g,'$1');
+        document.getElementById('wifiPass').value = (m[3]||'').replace(/\\(.)/g,'$1');
+        document.getElementById('wifiHidden').checked = m[4] === 'true';
+      }
+    }
+    window.scrollTo({top:0, behavior:'smooth'});
+    generate();
+  }
+
+  renderHistory();
+
+})();
+</script>
+</body>
+</html>
